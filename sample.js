@@ -151,7 +151,7 @@ function solve() {
         }
 
         set damage(damage) {
-            Validator.validateNumberRange(damage, 0, 100, ERROR_MESSAGES.INVALID_DAMAGE);
+            Validator.validateNumberRange(damage, 0, 99, ERROR_MESSAGES.INVALID_DAMAGE);
 
             this._damage = damage;
         }
@@ -255,6 +255,80 @@ function solve() {
             }
 
             commander.spellbook.push(...spells);
+            return this;
+        }
+
+        findCommanders(query) {
+            let toBeReturned = this._commanders.slice(0);
+            if (query.hasOwnProperty("name")) {
+                toBeReturned = toBeReturned.filter(commander => commander.name === query.name);
+            }
+            if (query.hasOwnProperty("alignment")) {
+                toBeReturned = toBeReturned.filter(commander => commander.alignment === query.alignment);
+            }
+            //toBeReturned.sort(); TODO
+            return toBeReturned;
+        }
+
+        findArmyUnitById(id) {
+            let armyUnits = this._armyUnits.slice(0);
+            armyUnits = armyUnits.filter(unit => unit._id === id);
+            if (armyUnits.length === 1) {
+                return armyUnits[0];
+            }
+            return undefined;
+            //return this._army_units.find(unit => unit.id === id);
+        }
+
+        findArmyUnits(query) {
+            let toBeReturned = this._armyUnits.slice(0);
+            if (query.hasOwnProperty("id")) {
+                toBeReturned = toBeReturned.filter(unit => unit._id === query.id);
+            }
+            if (query.hasOwnProperty("name")) {
+                toBeReturned = toBeReturned.filter(unit => unit.name === query.name);
+            }
+            if (query.hasOwnProperty("alignment")) {
+                toBeReturned = toBeReturned.filter(unit => unit.alignment === query.alignment);
+            }
+            toBeReturned.sort((a, b) => b.speed - a.speed);
+            // toBeReturned.forEach(function(index, array) {
+            //     if (array[index].speed === array[index + 1].speed) {
+
+            //     }
+            // });
+            return toBeReturned;
+        }
+
+        spellcast(casterName, spellName, targetUnitId) {
+            let caster = this._commanders.find(commander => commander.name === casterName);
+            if (caster.name === undefined) {
+                throw new Error(`Can't cast with non-existant commander ${casterName}`)
+            }
+
+            let spell = caster.spellbook.find(spell => spell.name === spellName);
+            if (spell.name === undefined) {
+                throw new Error(`${casterName} doesn't know ${spellName}`);
+            }
+
+            let target = this._armyUnits.find(unit => unit.id === targetUnitId);
+            if (target === undefined) {
+                throw new Error("Target not found!");
+            }
+
+            if (caster.mana < spell.manaCost) {
+                throw new Error("Not enough mana!");
+            }
+
+            // casting
+            caster.mana -= spell.manaCost;
+            spell.effect(target);
+
+            return this;
+        }
+
+        battle(attacker, defender) {
+
             return this;
         }
     }
